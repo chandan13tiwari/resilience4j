@@ -1,0 +1,30 @@
+# spring configs
+server:
+  port: 8091
+
+# resilience4j configs
+resilience4j.circuitbreaker:
+  instances:
+    testCircuitBreaker: # circuit breaker name
+      registerHealthIndicator: true # enable health indicator for circuit breaker in actuator
+      slidingWindowSize: 10 # consider the last 10 calls to calculate the failure rate
+      permittedNumberOfCallsInHalfOpenState: 3 # in half open state, only 3 number of api calls are allowed
+      slidingWindowType: COUNT_BASED # works on number of api calls hit, not the time
+      minimumNumberOfCalls: 5 # at least 5 api call needs to happen before calculating the failure rate
+      waitDurationInOpenState: 5s # how much time duration will circuit be open - means we can not check for the liveness of called service for this duration
+      failureRateThreshold: 50 # 50% - when failure rate is more than or equal to 50%, circuit will be open
+      eventConsumerBufferSize: 10 # buffered calls - this used to calculate failure rate - how much success calls get stored
+      automaticTransitionFromOpenToHalfOpenEnabled: true # automatic transition between Open to Half Open
+
+# actuator configs
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
