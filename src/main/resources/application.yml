@@ -42,6 +42,16 @@ resilience4j.ratelimiter:
       timeoutDuration: 0 # requests which can't proceed immediately (due to the rate limiter) won’t wait and fail instantly.
 
 
+
+
+# resilience4j time-limiter configs
+resilience4j.timelimiter:
+  instances:
+    testTimeLimiter:
+      timeoutDuration: 10s # time duration to run the task. If task is taking more than 10s, it will be interrupted
+      cancelRunningFuture: true # cancel the future if timeout exceed and stop the execution
+
+
 # actuator configs
 management:
   health:

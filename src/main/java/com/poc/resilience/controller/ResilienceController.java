@@ -3,6 +3,7 @@ package com.poc.resilience.controller;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/resilience")
@@ -71,5 +75,32 @@ public class ResilienceController {
 
     public ResponseEntity<String> fallbackForRateLimiter(Exception e) {
         return new ResponseEntity<>("Too Many Requests", HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+
+
+
+    @GetMapping("/timeLimiter")
+    @TimeLimiter(name = "testTimeLimiter", fallbackMethod = "fallbackForTimeLimiter")
+    public CompletableFuture<ResponseEntity<String>> processAsyncTask() {
+        return CompletableFuture.supplyAsync(() -> {
+            String dummyApiUrl = "http://localhost:8090/dummyApi/dummyTimeLimiter";
+            ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
+            System.out.println("response: " + response.getBody());
+            return ResponseEntity.ok(response.getBody());
+        });
+    }
+
+    public CompletableFuture<ResponseEntity<String>> fallbackForTimeLimiter(Throwable throwable) {
+        if (throwable instanceof java.util.concurrent.TimeoutException) {
+            return CompletableFuture.completedFuture(
+                    ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
+                            .body("Timeout occurred: The task took too long to complete.")
+            );
+        }
+        return CompletableFuture.completedFuture(
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("An unexpected error occurred.")
+        );
     }
 }
