@@ -2,7 +2,7 @@
 server:
   port: 8091
 
-# resilience4j configs
+# resilience4j circuitbreaker configs
 resilience4j.circuitbreaker:
   instances:
     testCircuitBreaker: # circuit breaker name
@@ -15,6 +15,22 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 50 # 50% - when failure rate is more than or equal to 50%, circuit will be open
       eventConsumerBufferSize: 10 # buffered calls - this used to calculate failure rate - how much success calls get stored
       automaticTransitionFromOpenToHalfOpenEnabled: true # automatic transition between Open to Half Open
+
+
+# resilience4j retry configs
+resilience4j.retry:
+  instances:
+    testRetry:
+      maxAttempts: 4 # max number of retries
+      waitDuration: 10s # wait after 1st failure
+      enableExponentialBackoff: true # exponentially increase wait duration between two retries
+      exponentialBackoffMultiplier: 2 # multiplier using which the wait duration exponentially counted
+      retryExceptions: # retry only if below exceptions thrown
+        # - org.springframework.web.client.HttpServerErrorException
+        # - java.io.IOException
+      ignoreExceptions: # don't retry or ignore below exception
+        # - io.github.robwin.exception.BusinessException
+
 
 # actuator configs
 management:

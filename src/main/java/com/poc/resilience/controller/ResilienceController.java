@@ -1,6 +1,7 @@
 package com.poc.resilience.controller;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,9 @@ public class ResilienceController {
     @Autowired
     RestTemplate restTemplate;
 
+    public static int retryCount = 1;
+    private static long lastInvocationTime = -1;
+
     @GetMapping("/circuitBreaker")
     @CircuitBreaker(name = "testCircuitBreaker", fallbackMethod = "fallbackForCircuitBreaker")
     public ResponseEntity<String> doCircuitBreaker() {
@@ -25,6 +29,32 @@ public class ResilienceController {
     }
 
     public ResponseEntity<String> fallbackForCircuitBreaker(Exception e) {
+        return ResponseEntity.ok("dummyApi is down");
+    }
+
+
+    @GetMapping("/retry")
+    @Retry(name = "testRetry", fallbackMethod = "fallbackForRetry")
+    public ResponseEntity<String> doRetry() {
+        // Log the time difference between retries
+        long currentTime = System.currentTimeMillis();
+        if (lastInvocationTime != -1) {
+            long durationMillis = currentTime - lastInvocationTime;
+            long durationSeconds = durationMillis / 1000;
+            System.out.println("Retry count: " + retryCount++);
+            System.out.println("Time since last call: " + durationSeconds + " seconds");
+        }
+
+        // Update lastInvocationTime to the current time
+        lastInvocationTime = currentTime;
+
+        String dummyApiUrl = "http://localhost:8090/dummyApi";
+        ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+    }
+
+    public ResponseEntity<String> fallbackForRetry(Exception e) {
+        retryCount = 1;
         return ResponseEntity.ok("dummyApi is down");
     }
 }
