@@ -1,6 +1,7 @@
 package com.poc.resilience.controller;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -56,5 +57,19 @@ public class ResilienceController {
     public ResponseEntity<String> fallbackForRetry(Exception e) {
         retryCount = 1;
         return ResponseEntity.ok("dummyApi is down");
+    }
+
+
+
+    @GetMapping("/rateLimiter")
+    @RateLimiter(name = "testRateLimiter", fallbackMethod = "fallbackForRateLimiter")
+    public ResponseEntity<String> doRateLimiter() {
+        String dummyApiUrl = "http://localhost:8090/dummyApi";
+        ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+    }
+
+    public ResponseEntity<String> fallbackForRateLimiter(Exception e) {
+        return new ResponseEntity<>("Too Many Requests", HttpStatus.TOO_MANY_REQUESTS);
     }
 }

@@ -32,6 +32,16 @@ resilience4j.retry:
         # - io.github.robwin.exception.BusinessException
 
 
+
+# resilience4j rate-limiter configs
+resilience4j.ratelimiter:
+  instances:
+    testRateLimiter:
+      limitForPeriod: 2 # max number of api calls allowed within the given period
+      limitRefreshPeriod: 5s # period after which the rate limit is refreshed, after 5s again it will accept 2 calls
+      timeoutDuration: 0 # requests which can't proceed immediately (due to the rate limiter) won’t wait and fail instantly.
+
+
 # actuator configs
 management:
   health:
@@ -40,7 +50,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: "*"
   endpoint:
     health:
       show-details: always
