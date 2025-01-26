@@ -37,6 +37,14 @@ public class ResilienceController {
     @Retry(name = "testRetry", fallbackMethod = "fallbackForRetry")
     public ResponseEntity<String> doRetry() {
         // Log the time difference between retries
+        logTimeDuration();
+
+        String dummyApiUrl = "http://localhost:8090/dummyApi";
+        ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+    }
+
+    private static void logTimeDuration() {
         long currentTime = System.currentTimeMillis();
         if (lastInvocationTime != -1) {
             long durationMillis = currentTime - lastInvocationTime;
@@ -47,14 +55,10 @@ public class ResilienceController {
 
         // Update lastInvocationTime to the current time
         lastInvocationTime = currentTime;
-
-        String dummyApiUrl = "http://localhost:8090/dummyApi";
-        ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
-        return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
     }
 
     public ResponseEntity<String> fallbackForRetry(Exception e) {
         retryCount = 1;
-        return ResponseEntity.ok("dummyApi is down");
+        return new ResponseEntity<>("dummyApi is down", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
