@@ -1,5 +1,6 @@
 package com.poc.resilience.controller;
 
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,5 +27,36 @@ public class ResilienceController {
 
     public ResponseEntity<String> fallbackForCircuitBreaker(Exception e) {
         return ResponseEntity.ok("dummyApi is down");
+    }
+
+
+   /* @GetMapping("/bulkheadSemaphore")
+    @Bulkhead(name = "testBulkheadSemaphore", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "fallbackForBulkheadSemaphore")
+    public ResponseEntity<String> doBulkheadSemaphore() {
+        System.out.println("Bulkhead semaphore");
+        String dummyApiUrl = "http://localhost:8090/dummyApi/dummyBulkhead";
+        ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
+        System.out.println("Thread: " + Thread.currentThread().getName());
+        return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+    }
+
+    public ResponseEntity<String> fallbackForBulkheadSemaphore(Exception e) {
+        return new ResponseEntity<>("Semaphore::Too many requests", HttpStatus.TOO_MANY_REQUESTS);
+    }*/
+
+
+
+    @GetMapping("/bulkheadThreadPool")
+    @Bulkhead(name = "testBulkheadThreadPool", type = Bulkhead.Type.THREADPOOL, fallbackMethod = "fallbackForBulkheadThreadPool")
+    public ResponseEntity<String> doBulkheadThreadPool() {
+        System.out.println("Bulkhead thread pool");
+        String dummyApiUrl = "http://localhost:8090/dummyApi/dummyBulkhead";
+        ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
+        System.out.println("Thread: " + Thread.currentThread().getName());
+        return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+    }
+
+    public ResponseEntity<String> fallbackForBulkheadThreadPool(Exception e) {
+        return new ResponseEntity<>("Threadpool::Too many requests", HttpStatus.TOO_MANY_REQUESTS);
     }
 }

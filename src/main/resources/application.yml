@@ -16,6 +16,23 @@ resilience4j.circuitbreaker:
       eventConsumerBufferSize: 10 # buffered calls - this used to calculate failure rate - how much success calls get stored
       automaticTransitionFromOpenToHalfOpenEnabled: true # automatic transition between Open to Half Open
 
+
+
+# resilience4j bulkhead configs
+#resilience4j.bulkhead:
+#  instances:
+#    testBulkheadSemaphore:
+#      maxWaitDuration: 5000ms # max wait time for thread. Thread will wait for this much time. if resources are not free it will goto fallback
+#      maxConcurrentCalls: 5 # allowed 5 concurrent api calls. Once they are processed another 5 calls will proceed
+
+resilience4j.thread-pool-bulkhead:
+  instances:
+    testBulkheadThreadPool:
+      maxThreadPoolSize: 5 # max number of thread a pool can have. more than this pool capacity hit will store in queue
+      coreThreadPoolSize: 5 # core number of thread that are kept alive
+      queueCapacity: 1 # max number of tasks that can be queued if all threads are busy
+      writableStackTraceEnabled: true
+
 # actuator configs
 management:
   health:
