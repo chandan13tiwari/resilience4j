@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.concurrent.CompletableFuture;
+
 @RestController
 @RequestMapping("/resilience")
 public class ResilienceController {
@@ -30,7 +32,7 @@ public class ResilienceController {
     }
 
 
-   /* @GetMapping("/bulkheadSemaphore")
+   @GetMapping("/bulkheadSemaphore")
     @Bulkhead(name = "testBulkheadSemaphore", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "fallbackForBulkheadSemaphore")
     public ResponseEntity<String> doBulkheadSemaphore() {
         System.out.println("Bulkhead semaphore");
@@ -42,21 +44,26 @@ public class ResilienceController {
 
     public ResponseEntity<String> fallbackForBulkheadSemaphore(Exception e) {
         return new ResponseEntity<>("Semaphore::Too many requests", HttpStatus.TOO_MANY_REQUESTS);
-    }*/
+    }
 
 
 
     @GetMapping("/bulkheadThreadPool")
     @Bulkhead(name = "testBulkheadThreadPool", type = Bulkhead.Type.THREADPOOL, fallbackMethod = "fallbackForBulkheadThreadPool")
-    public ResponseEntity<String> doBulkheadThreadPool() {
+    public CompletableFuture<ResponseEntity<String>> doBulkheadThreadPool() {
         System.out.println("Bulkhead thread pool");
-        String dummyApiUrl = "http://localhost:8090/dummyApi/dummyBulkhead";
-        ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
-        System.out.println("Thread: " + Thread.currentThread().getName());
-        return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+        return CompletableFuture.supplyAsync(() -> {
+            String dummyApiUrl = "http://localhost:8090/dummyApi/dummyBulkhead";
+            ResponseEntity<String> response = restTemplate.getForEntity(dummyApiUrl, String.class);
+            System.out.println("Thread: " + Thread.currentThread().getName());
+            System.out.println("response: " + response.getBody());
+            return ResponseEntity.ok(response.getBody());
+        });
     }
 
-    public ResponseEntity<String> fallbackForBulkheadThreadPool(Exception e) {
-        return new ResponseEntity<>("Threadpool::Too many requests", HttpStatus.TOO_MANY_REQUESTS);
+    public CompletableFuture<ResponseEntity<String>> fallbackForBulkheadThreadPool(Throwable throwable) {
+        return CompletableFuture.completedFuture(
+                    ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                            .body("bulkheadThreadPool::Too Many Requests."));
     }
 }

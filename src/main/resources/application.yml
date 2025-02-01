@@ -19,11 +19,11 @@ resilience4j.circuitbreaker:
 
 
 # resilience4j bulkhead configs
-#resilience4j.bulkhead:
-#  instances:
-#    testBulkheadSemaphore:
-#      maxWaitDuration: 5000ms # max wait time for thread. Thread will wait for this much time. if resources are not free it will goto fallback
-#      maxConcurrentCalls: 5 # allowed 5 concurrent api calls. Once they are processed another 5 calls will proceed
+resilience4j.bulkhead:
+  instances:
+    testBulkheadSemaphore:
+      maxWaitDuration: 5000ms # max wait time for thread. Thread will wait for this much time. if resources are not free it will goto fallback
+      maxConcurrentCalls: 5 # allowed 5 concurrent api calls. Once they are processed another 5 calls will proceed
 
 resilience4j.thread-pool-bulkhead:
   instances:
